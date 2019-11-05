@@ -24,29 +24,27 @@
 </head>
 <body>
 
-<form action="http://47.104.87.243:8081/reg" method="post" class="sub">
-
 <div>
-	用户名:<input type="text" name="username" class="uname">
+	用户名:<input type="text" class="uname">
 	<span class="required">*</span>
 	<p class="userver"></p>
 </div>
 
 <div>
-	密码: <input type="password" name="password" class="pwd">
+	密码: <input type="password" class="pwd">
 	<span class="required">*</span>
+	<p class="pwdver"></p>
 </div>
 
 <div>
-	重复密码: <input type="password" name="repwd" class="repwd">
+	重复密码: <input type="password" class="repwd">
 	<span class="required">*</span>
+	<p class="rever"></p>
 </div>
 
 <div>
-	<input type="submit" value="注册" class="btn">
+	<input type="button" value="注册" class="btn">
 </div>
-</form>
-
 <script>
 
 	// 正则表达式
@@ -73,28 +71,51 @@
 		var reg = /^[a-zA-Z][a-zA-Z0-9_]{4,15}$/;
 
 		if (reg.test(username)) {
-		    $(".userver").html("符合要求");
+		    $(".userver").html("符合要求").addClass("success").removeClass("error");
+
 		} else {
-		    $(".userver").html("不符合要求");
+		    $(".userver").html("不符合要求").addClass("error").removeClass("success");
 		}
-
-
-
-
     });
 
+	$(".pwd").blur(function () {
+
+        var password = $(this).val();
+
+        // 创建正则表达式
+        var reg = /^[a-zA-Z0-9_]{4,15}$/;
+
+        if (reg.test(password)) {
+            $(".pwdver").html("密码符合要求").addClass("success").removeClass("error");
+        } else {
+            $(".pwdver").html("密码不符合要求").addClass("error").removeClass("success");
+        }
+    });
+
+	$(".repwd").blur(function () {
+        var repwd = $(this).val();
+        var pwd = $(".pwd").val();
+
+        if (pwd == repwd) {
+            $(".rever").html("两次密码相同").addClass("success").removeClass("error");
+		} else {
+            $(".rever").html("两次密码不同").addClass("error").removeClass("success");
+        }
+    });
 
 	$(".btn").click(function () {
 
 	    // 主动触发某个标签的某个事件
 		$("input").trigger("blur");
 
-
+		if ($(".error").length == 0) {
+            console.log("没有任何问题,数据全部可用");
+            // 然后发出ajax请求,进行注册
+        } else {
+		    console.log("数据有问题,请检查");
+		    // 什么都不做
+		}
     });
-
-
-
-
 
 
 </script>
