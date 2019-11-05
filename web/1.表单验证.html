@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>表单验证</title>
+	<script src="js/jquery-3.2.1.min.js"></script>
+
+	<style>
+
+		.required {
+			color: red;
+		}
+
+		.success {
+			color: green;
+		}
+
+		.error {
+			color: red;
+		}
+
+
+	</style>
+</head>
+<body>
+
+<form action="http://47.104.87.243:8081/reg" method="post" class="sub">
+
+<div>
+	用户名:<input type="text" name="username" class="uname">
+	<span class="required">*</span>
+	<p class="userver"></p>
+</div>
+
+<div>
+	密码: <input type="password" name="password" class="pwd">
+	<span class="required">*</span>
+</div>
+
+<div>
+	重复密码: <input type="password" name="repwd" class="repwd">
+	<span class="required">*</span>
+</div>
+
+<div>
+	<input type="submit" value="注册" class="btn">
+</div>
+</form>
+
+<script>
+
+	// 正则表达式
+	// 匹配字符串格式
+
+	// 正常的用户名密码匹配
+	// ^[a-zA-Z][a-zA-Z0-9_]{4,15}$
+	// 手机号码匹配
+	// 电子邮箱匹配
+
+	// 两种验证情况:
+	// 1.一边输入一边验证(keyDown)
+	// 2.用户不在这个输入框输入的时候(blur)
+
+	// blur: 输入框失去焦点
+
+	$(".uname").blur(function () {
+
+	    console.log("测试失去焦点");
+
+	    var username = $(this).val();
+
+	    // 创建正则表达式
+		var reg = /^[a-zA-Z][a-zA-Z0-9_]{4,15}$/;
+
+		if (reg.test(username)) {
+		    $(".userver").html("符合要求");
+		} else {
+		    $(".userver").html("不符合要求");
+		}
+
+
+
+
+    });
+
+
+	$(".btn").click(function () {
+
+	    // 主动触发某个标签的某个事件
+		$("input").trigger("blur");
+
+
+    });
+
+
+
+
+
+
+</script>
+
+
+</body>
+</html>

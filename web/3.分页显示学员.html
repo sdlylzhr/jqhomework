@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>分页</title>
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<style>
+
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		input {
+			height: 19px;
+		}
+
+		.tab {
+			width: 50%;
+			margin: 0 auto;
+		}
+
+		.selectPage {
+			width: 30px;
+		}
+
+		tbody tr {
+			text-align: center;
+		}
+
+		.pageNavi {
+			text-align: center;
+		}
+
+		.pagenums input {
+			width: 30px;
+		}
+
+		.cp {
+			border: 1px solid red;
+		}
+	</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+	<table border="1" class="tab">
+		<thead>
+		<tr>
+			<th><input type="checkbox" class="allcheck">全选</th>
+			<th>学号</th>
+			<th>姓名</th>
+			<th>年龄</th>
+			<th>住址</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		</tbody>
+	</table>
+</div>
+
+<div class="pageNavi">
+
+	<span>第<span class="curPage">1</span>页</span>
+	<span>共<span class="pages">1</span>页</span>
+	<input type="button" value="首页" class="firstPage">
+	<input type="button" value="上一页" class="prePage">
+
+	<!--中间的小页码条-->
+	<span>
+		<span class="predot">...</span>
+		<span class="pagenums"></span>
+		<span class="nextdot">...</span>
+	</span>
+
+	<input type="button" value="下一页" class="nextPage">
+	<input type="button" value="末页" class="endPage">
+	<span>转到第<input type="text" class="selectPage">页</span>
+	<input type="button" value="GO" class="btn">
+</div>
+
+<div>
+	<input type="button" value="删除选中" class="delbtn">
+</div>
+
+<script>
+
+    sendRequest(1);
+
+    // 记录上一次请求的结果
+    var resultGlobal = {};
+
+
+    // 写一个通用的函数, 专门发送请求
+    function sendRequest(pageNum) {
+
+        $.ajax({
+            url: "http://47.104.87.243:8081/allstu",
+            data: {
+                page: pageNum,
+                size: 10
+            }
+        }).done(function (result) {
+
+            // 记录结果备用
+            resultGlobal = result;
+            // 更新table
+            loadTable(result);
+            // 更新pageNavi
+            loadPageNavi(result);
+
+        });
+    }
+
+    // 更新table的内容
+    function loadTable(result) {
+
+        // 清空table的之前的内容
+        $("tbody").html("");
+
+        var stus = result.list;
+
+        for (var i = 0; i < stus.length; i++) {
+            var stu = stus[i];
+
+            var tr = $("<tr></tr>").appendTo("tbody");
+
+            $("<td></td>").append($("<input type='checkbox' class='rowcheck'>")).appendTo(tr);
+
+            $("<td></td>").html(stu.sid).appendTo(tr);
+            $("<td></td>").html(stu.sname).appendTo(tr);
+            $("<td></td>").html(stu.age).appendTo(tr);
+            $("<td></td>").html(stu.address).appendTo(tr);
+        }
+    }
+
+    // 更新页码条的信息
+    function loadPageNavi(result) {
+
+        // 更新当前页页码
+        $(".curPage").html(result.pageNum);
+        // 更新总页码
+        $(".pages").html(result.pages);
+
+        // 因为要做的事有点多,所以就拿出一个方法
+        // 修改页码条的各种状态,禁用/启用啥的
+        resetButtonStatus(result);
+        // 重置小页码
+        resetPageNums(result);
+    }
+
+    // 重置页码状态
+    function resetButtonStatus(result) {
+        // 当处在第一页时,禁用首页和上一页按钮
+        if (result.isFirstPage) {
+            $(".firstPage").attr("disabled", true);
+            $(".prePage").attr("disabled", true);
+        } else {
+            $(".firstPage").removeAttr("disabled");
+            $(".prePage").removeAttr("disabled");
+        }
+        console.log(result.isLastPage);
+        // 当处在最后一页时,禁用末页和下一页按钮
+        if (result.isLastPage) {
+            $(".endPage").attr("disabled", true);
+            $(".nextPage").attr("disabled", true);
+        } else {
+            $(".endPage").removeAttr("disabled");
+            $(".nextPage").removeAttr("disabled");
+        }
+
+        // 如果小页码第一个是1, 那就不显示前面的...
+        if (result.firstPage === 1) {
+            $(".predot").hide();
+        } else {
+            $(".predot").show();
+        }
+        // 如果小页码最后一个是末页, 那就不显示后面的...
+        if (result.lastPage === result.pages) {
+            $(".nextdot").hide();
+        } else {
+            $(".nextdot").show();
+        }
+    }
+
+    // 重置中间的页码
+    function resetPageNums(result) {
+
+        // 清空原来的页码
+        $(".pagenums").html("");
+        // 获取后台给的具体页码
+        var nums = result.navigatepageNums;
+
+        // 遍历页码
+        for (var i = 0; i < nums.length; i++) {
+
+            // 按照页码数创建具体页码input按钮
+            var inp = $("<input type='button'>").val(nums[i]).attr("page", nums[i]).appendTo(".pagenums");
+
+            // 如果是当前页码, 就禁用, 并且添加标记边框
+            if (nums[i] === result.pageNum) {
+                inp.attr("disabled", true).addClass("cp");
+            }
+        }
+    }
+
+    // 绑定页码数字按钮方法
+    $(".pagenums").on("click", "input", function () {
+        // 每次读取标签的page属性(自己随便定义的)
+        var page = $(this).attr("page");
+        sendRequest(page);
+    });
+
+
+    $(".firstPage").click(function () {
+        sendRequest(1);
+    });
+
+
+    $(".prePage").click(function () {
+
+        // 如果当前不是第一页, 就访问上一页
+        if (!resultGlobal.isFirstPage) {
+            sendRequest(resultGlobal.prePage);
+        }
+    });
+
+    $(".nextPage").click(function () {
+        if (resultGlobal.hasNextPage) {
+            sendRequest(resultGlobal.nextPage);
+        }
+    });
+
+    $(".endPage").click(function () {
+        sendRequest(resultGlobal.pages);
+    });
+
+    $(".btn").click(function () {
+
+        var num = $(".selectPage").val();
+
+        if (num > 0 && num <= resultGlobal.pages) {
+            sendRequest(num);
+        } else if (num <= 0) {
+            sendRequest(1);
+        } else {
+            sendRequest(resultGlobal.pages);
+        }
+    });
+
+// ******************************选择删除和全选********************************
+    // 全选按钮
+    $(".allcheck").change(function () {
+
+        // 获取全选按钮当前的选中状态
+        var c = $(this).prop("checked");
+
+        // 改变每行的checkbox的选中状态, 和全选按钮一致
+        $(".rowcheck").prop("checked",c);
+
+        // 给标签添加预备删除的class值
+        if (c) {
+            $(".rowcheck").addClass("del");
+		} else {
+            $(".rowcheck").removeClass("del");
+        }
+
+    });
+
+    // 给每行的checkbox绑定事件
+    $(".tab").on("change",".rowcheck",function () {
+
+		if ($(this).prop("checked")) {
+            // 从未选中到选中
+            console.log("选中");
+            $(this).addClass("del");
+        } else {
+            // 从选中到未选中
+            console.log("未选中");
+            $(this).removeClass("del");
+            $(".allcheck").prop("checked",false);
+        }
+    });
+
+    // 删除选中的标签
+    $(".delbtn").click(function () {
+
+        // 遍历选择的标签
+        $(".del").each(function () {
+            // 每次循环都执行一次该函数, 函数中的this代表数组中的一个标签对象
+            console.log(this);
+            $(this).parents("tr").remove();
+        });
+    });
+
+
+
+</script>
+
+</body>
+</html>
