@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<table>
+<table class="tab" border="1">
 	<tr>
 		<th><input type="checkbox" class="allcheck">全选</th>
 		<th>商品信息</th>
@@ -35,7 +35,7 @@
 			<input type="text" value="1" class="count">
 			<input type="button" value="+" class="plus">
 		</td>
-		<td><span>3.20</span></td>
+		<td><span class="sum" price="3.20">3.20</span></td>
 	</tr>
 	<tr>
 		<td><input type="checkbox" class="rowcheck"></td>
@@ -45,14 +45,119 @@
 			<input type="text" value="1" class="count">
 			<input type="button" value="+" class="plus">
 		</td>
-		<td><span>7.45</span></td>
+		<td><span class="sum" price="7.45">7.45</span></td>
 	</tr>
 </table>
+
+<div>
+	<span>总价:</span>
+	<span class="pricesum">0.00</span>
+</div>
 
 <script>
 
 
+    $(".allcheck").change(function () {
 
+        // 获取全选按钮当前的选中状态
+        var c = $(this).prop("checked");
+
+        // 改变每行的checkbox的选中状态, 和全选按钮一致
+        $(".rowcheck").prop("checked",c);
+
+        // 给标签添加预备删除的class值
+        if (c) {
+            $(".rowcheck").addClass("math");
+        } else {
+            $(".rowcheck").removeClass("math");
+        }
+        // 状态调整后重新计算总价
+        totalPrice();
+
+    });
+
+    //
+    $(".tab").on("change",".rowcheck",function () {
+
+        if ($(this).prop("checked")) {
+            $(this).addClass("math");
+        } else {
+            $(this).removeClass("math");
+            $(".allcheck").prop("checked",false);
+        }
+
+        // 状态调整后重新计算总价
+        totalPrice();
+    });
+
+    // 加号键增加数量
+    $(".tab").on("click",".plus",function () {
+        var cinput = $(this).siblings(".count");
+        var count = parseInt(cinput.val())+1;
+        // 不能低于1
+        if (count > 0) {
+            cinput.val(count);
+            singlePrice(cinput);
+        }
+    });
+
+    // 减号键减少数量
+    $(".tab").on("click",".minus",function () {
+        var cinput = $(this).siblings(".count");
+        var count = parseInt(cinput.val())-1;
+        // 不能低于1
+        if (count > 0) {
+            cinput.val(count);
+            // 调整后计算商品价格
+            singlePrice(cinput);
+		}
+    });
+
+    // 输入框失去焦点时,判断输入的内容是否有效(可以使用正则判断)
+    $(".tab").on("blur",".count",function () {
+
+        if (parseInt($(this).val()) <= 0)  {
+            alert("输入错误");
+            $(this).val(1);
+		}
+        singlePrice($(this));
+    });
+
+
+    // 参数作用是数量输入框的jq对象
+    function singlePrice(input) {
+
+        // 获取输入框的数量
+        var count = input.val();
+
+        // 找到后面的商品总价
+        var sumspan = input.parents("tr").find(".sum");
+
+        // 获取商品单价*数量
+        var sum = sumspan.attr("price")*count;
+
+        // 给总价赋值
+        sumspan.html(sum.toFixed(2));
+
+        // 更新所有商品总计价格
+        totalPrice();
+    }
+
+	// 所有商品的总计价格
+    function totalPrice() {
+
+        // 简单的求和
+        var sum = 0;
+        $(".math").each(function () {
+            // 通过checkbox标签找到后面的商品总价标签,获取商品总价
+            var sumPrice = $(this).parents("tr").find(".sum").html();
+            // 求和
+            sum = sum + parseFloat(sumPrice);
+        });
+
+        // 给总价赋值
+        $(".pricesum").html(sum.toFixed(2));
+    }
 
 </script>
 </body>
